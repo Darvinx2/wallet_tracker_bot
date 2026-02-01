@@ -14,6 +14,15 @@ DB_CONNECT = {
     "host": os.getenv("DB_HOST"),
 }
 
+DATABASE_URL = (
+    f"postgresql+asyncpg://"
+    f"{os.getenv('DB_USER')}:"
+    f"{os.getenv('DB_PASSWORD')}@"
+    f"{os.getenv('DB_HOST')}:"
+    f"{os.getenv('DB_PORT')}/"
+    f"{os.getenv('DB_NAME')}"
+)
+
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN environment variable is not set")
 
