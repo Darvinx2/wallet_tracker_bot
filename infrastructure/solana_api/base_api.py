@@ -14,6 +14,7 @@ class BaseApiClient(ABC):
     ) -> Mapping[str, Any]:
         try:
             data = await response.json()
+            return data
         except Exception as e:
             logger.error(f"{api_name} error {response.status}: {e}")
             raise Exception(f"{api_name}: Error {response.status}")
