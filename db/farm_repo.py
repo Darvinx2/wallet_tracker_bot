@@ -1,10 +1,11 @@
 from db import db_connection
 
 
-async def get_farm(user_id: int):
-    return await db_connection.pool.fetchrow(
-        "SELECT id FROM farms WHERE user_id = $1", user_id
-    )
+class FarmAccsessor():
+    async def get_farm(self, user_id: int):
+        return await db_connection.pool.fetchrow(
+            "SELECT id FROM farms WHERE user_id = $1", user_id
+        )
 
 
 async def insert_farm(user_id: int, chain: str, total: float):

@@ -25,6 +25,7 @@ class Farms(Base):
 
     farm_wallet = relationship("FarmWallets", back_populates="farm", cascade="all, delete-orphan")
 
+
 class FarmWallets(Base):
     __tablename__ = "farm_wallets"
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 
 from data.config import BOT_TOKEN
+from db.database import Database
 from db.db_connection import close_db, init_db
 from handlers import (balance_abstract, balance_evm, balance_menu, drop_menu,
                       error, fallback, main_menu)
@@ -41,8 +42,9 @@ for name in [
 async def main() -> None:
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
+    database = Database()
 
-    await init_db()
+    await database.connect()
 
     middleware = AiohttpMiddleware()
     dp.update.middleware(middleware=middleware)
@@ -64,7 +66,7 @@ async def main() -> None:
         await dp.start_polling(bot)
     finally:
         await middleware.stop()
-        await close_db()
+        await database.disconnect()
 
 
 if __name__ == "__main__":
