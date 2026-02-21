@@ -1,36 +1,38 @@
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+
 from db import db_connection
+from models.database_model import Farms, FarmWallets
 
 
 class FarmAccsessor():
-    async def get_farm(self, user_id: int):
-        return await db_connection.pool.fetchrow(
-            "SELECT id FROM farms WHERE user_id = $1", user_id
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_farm_id(self, user_id: int) -> int:
+        farm = await self.session.scalar(
+            select(Farms.id).where(Farms.user_id == user_id)
         )
 
+        return farm
 
-async def insert_farm(user_id: int, chain: str, total: float):
-    return await db_connection.pool.fetchval(
-        "INSERT INTO farms(user_id, chain, total) VALUES($1, $2, $3) RETURNING id",
-        user_id,
-        chain,
-        total,
-    )
+    async def insert_farm(self, user_id: int, chain: str, total: float) -> int:
+        farm = Farms(user_id=user_id, chain=chain, total=total)
+        self.session.add(farm)
+        await self.session.commit()
+        return farm.id
 
+    async def insert_wallet(self, farm_id: int, chain: str, wallet: str) -> None:
+        farm_wallet = FarmWallets(
+            farm_id=farm_id,
+            chain=chain,
+            wallet=wallet,
+        )
+        self.session.add(farm_wallet)
+        await self.session.commit()
 
-async def insert_wallet(farm_id: int, chain: str, wallet: str):
-    return await db_connection.pool.execute(
-        "INSERT INTO farm_wallets(farm_id, chain, wallet) VALUES($1, $2, $3)",
-        farm_id,
-        chain,
-        wallet,
-    )
-
-
-async def get_farm_id(user_id: int):
-    return await db_connection.pool.fetchval(
-        "SELECT id FROM farms WHERE user_id = $1", user_id
-    )
-
+    async def get_farm_wallet(user_id: int):
+        pass
 
 async def get_farm_wallet(user_id: int):
     return await db_connection.pool.fetchrow(

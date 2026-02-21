@@ -3,9 +3,10 @@ import logging
 import aiohttp
 from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from data.text import CHOSE_CHAIN_TEXT, CREATE_FARM_TEXT, FARM_MENU_TEXT, SOON
-from db.farm_repo import get_farm
+from db.farm_repo import FarmAccsessor
 from decorator.log_handlers import log_callback
 from handlers.farm.farm_state import FarmState
 from infrastructure.farm.add_wallet_to_farm import add_wallet_to_farm
@@ -22,9 +23,9 @@ logger.setLevel(logging.INFO)
 
 @router.callback_query(F.data == "farm")
 @log_callback(logger)
-async def farm_menu(callback: types.CallbackQuery, state: FSMContext):
+async def farm_menu(callback: types.CallbackQuery, state: FSMContext, db_session: AsyncSession):
     user_id = callback.from_user.id
-    farm = await get_farm(int(user_id))
+    farm = await FarmAccsessor(db_session).get_farm_id(user_id)
     if farm:
         await callback.message.edit_text(
             text=FARM_MENU_TEXT, reply_markup=farm_menu_kb()
@@ -60,12 +61,12 @@ async def farm_chain_abstract(callback: types.CallbackQuery, state: FSMContext):
 @router.message(FarmState.waiting_farm)
 @log_callback(logger)
 async def create_first_farm(
-    message: types.Message, state: FSMContext, session: aiohttp.ClientSession
+    message: types.Message, state: FSMContext, session: aiohttp.ClientSession,  db_session: AsyncSession
 ):
     user_id = message.from_user.id
     data = await state.get_data()
     chain = data["chain"]
     new_wallets = message.text.splitlines()
-    request = await add_wallet_to_farm(user_id, new_wallets, session, chain)
+    request = await add_wallet_to_farm(user_id, new_wallets, session, chain, db_session)
     await state.clear()
     await message.answer(text=request, reply_markup=exit_to_chose_chain_kb())
