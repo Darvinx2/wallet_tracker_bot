@@ -1,7 +1,6 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db import db_connection
 from models.database_model import Farms, FarmWallets
 
 
