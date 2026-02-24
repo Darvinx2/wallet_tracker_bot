@@ -2,8 +2,6 @@ from aiogram import BaseMiddleware
 from aiohttp import ClientSession
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.database import session
-
 
 class AiohttpMiddleware(BaseMiddleware):
     def __init__(self, session_maker: async_sessionmaker):

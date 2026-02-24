@@ -2,6 +2,7 @@ import logging
 
 import aiohttp
 from aiogram import F, Router, types
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from decorator.log_handlers import log_callback
 from infrastructure.farm.analysis_farm import get_answer
@@ -15,7 +16,7 @@ logger.setLevel(logging.INFO)
 
 @router.callback_query(F.data == "analysis_farm")
 @log_callback(logger)
-async def analysis_farm(callback: types.CallbackQuery, session=aiohttp.ClientSession):
+async def analysis_farm(callback: types.CallbackQuery, session: aiohttp.ClientSession, db_session: AsyncSession):
     user_id = callback.from_user.id
-    answer = await get_answer(user_id, session)
+    answer = await get_answer(user_id, session, db_session)
     await callback.message.edit_text(text=answer, reply_markup=exit_to_chose_chain_kb())

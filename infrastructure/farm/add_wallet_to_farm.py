@@ -3,7 +3,7 @@ from typing import List
 import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.farm_repo import delete_farm, FarmAccsessor
+from db.farm_repo import FarmRepository
 from infrastructure.farm.prepare_farm_data import prepare_farm_data
 
 
@@ -14,8 +14,10 @@ async def add_wallet_to_farm(
         chain: str,
         db_session: AsyncSession
 ) -> object:
-    db = FarmAccsessor(db_session)
-    await delete_farm(user_id)
+    db = FarmRepository(db_session)
+    if await db.get_farm_id(user_id):
+        await db.delete_farm(user_id)
+
     request, wallets, total = await prepare_farm_data(
         user_id, new_wallets, session, chain
     )

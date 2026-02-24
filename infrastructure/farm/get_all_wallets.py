@@ -1,12 +1,14 @@
 from typing import List
 
-from db.farm_repo import get_farm_wallet
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from db.farm_repo import FarmRepository
 
 
-async def get_requests(user_id: int, wallets: List[str]) -> List[str]:
-    db_row = await get_farm_wallet(user_id)
+async def get_requests(user_id: int, wallets: List[str], db_session: AsyncSession) -> List[str]:
+    db = FarmRepository(db_session)
 
-    wallets_db = db_row["array_agg"]
+    wallets_db = await db.get_farm_wallet(user_id)
 
     if wallets_db:
         wallets.extend(wallets_db)

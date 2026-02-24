@@ -1,11 +1,11 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import db_connection
 from models.database_model import Farms, FarmWallets
 
 
-class FarmAccsessor():
+class FarmRepository():
     def __init__(self, session: AsyncSession):
         self.session = session
 
@@ -13,7 +13,6 @@ class FarmAccsessor():
         farm = await self.session.scalar(
             select(Farms.id).where(Farms.user_id == user_id)
         )
-
         return farm
 
     async def insert_farm(self, user_id: int, chain: str, total: float) -> int:
@@ -31,38 +30,36 @@ class FarmAccsessor():
         self.session.add(farm_wallet)
         await self.session.commit()
 
-    async def get_farm_wallet(user_id: int):
-        pass
+    async def get_farm_wallet(self, user_id: int):
+        wallets = await self.session.scalar(
+            select(func.array_agg(FarmWallets.wallet)).join(Farms.farm_wallet).where(Farms.user_id == user_id)
+        )
+        return wallets
 
-async def get_farm_wallet(user_id: int):
-    return await db_connection.pool.fetchrow(
-        "SELECT array_agg(wallet) FROM farm_wallets "
-        "JOIN farms "
-        "ON farms.id = farm_wallets.farm_id "
-        "WHERE user_id = $1;",
-        user_id,
-    )
+    async def delete_farm(self, user_id: int) -> None:
+        farm_user_id = await self.session.scalar(
+            select(Farms.id).where(Farms.user_id == user_id)
+        )
+        farm = await self.session.get(Farms, farm_user_id)
+        await self.session.delete(farm)
+        await self.session.commit()
 
+    async def update_total(self, total: float, user_id: int):
+        farm_id = await self.session.scalar(
+            select(Farms.id).where(Farms.user_id == user_id)
+        )
+        farm = await self.session.get(Farms, farm_id)
+        farm.total = total
+        await self.session.commit()
 
-async def delete_farm(user_id: int):
-    return await db_connection.pool.execute(
-        "DELETE FROM farms WHERE user_id = $1", user_id
-    )
+    async def get_total(self, user_id: int):
+        total = await self.session.scalar(
+            select(Farms.total).where(Farms.user_id == user_id)
+        )
+        return total
 
-
-async def update_total(total: float, user_id: int):
-    return await db_connection.pool.execute(
-        "UPDATE farms SET total = $1 WHERE user_id = $2", total, user_id
-    )
-
-
-async def get_total(user_id: int):
-    return await db_connection.pool.fetchval(
-        "SELECT total FROM farms WHERE user_id = $1", user_id
-    )
-
-
-async def get_last_date(user_id: int):
-    return await db_connection.pool.fetchval(
-        "SELECT created_date FROM farms WHERE user_id = $1", user_id
-    )
+    async def get_last_date(self, user_id: int):
+        created_date = await self.session.scalar(
+            select(Farms.created_date).where(Farms.user_id == user_id)
+        )
+        return created_date
