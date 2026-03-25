@@ -9,8 +9,9 @@ logger.setLevel(logging.INFO)
 
 
 class BaseApiClient(ABC):
+    @staticmethod
     async def handler_response(
-        self, response: aiohttp.ClientResponse, api_name: str
+        response: aiohttp.ClientResponse, api_name: str
     ) -> Mapping[str, Any]:
         try:
             data = await response.json()

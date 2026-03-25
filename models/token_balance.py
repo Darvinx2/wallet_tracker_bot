@@ -15,24 +15,28 @@ class TokenBalance:
 
     def __post_init__(self):
         if isinstance(self.balance, str):
-            self.balance = float(self.balance)
+            try:
+                self.balance = float(self.balance)
+            except ValueError as e:
+                logger.error(f"Balance conversion error: {e}")
+                raise ValueError(f"Balance conversion error: {e}")
         if isinstance(self.price, str):
-            self.price = float(self.price)
+            try:
+                self.price = float(self.price)
+            except ValueError as e:
+                logger.error(f"Price conversion error: {e}")
+                raise ValueError(f"Price conversion error: {e}")
 
     @property
     def total_amount(self) -> Union[float, None]:
-        try:
-            if isinstance(self.price, (int, float)) and isinstance(
-                self.balance, (int, float)
-            ):
-                total_amount = round(self.price * self.balance, 2)
-                min_balance = 1
-                if total_amount <= min_balance:
-                    return None
-                else:
-                    return total_amount
-            else:
+        if isinstance(self.price, (int, float)) and isinstance(
+            self.balance, (int, float)
+        ):
+            total_amount = round(self.price * self.balance, 2)
+            min_balance = 1
+            if total_amount <= min_balance:
                 return None
-        except Exception:
-            logger.error(f"Error calculating: {Exception}")
-            raise f"Error calculating: {Exception}"
+            else:
+                return total_amount
+        else:
+            return None
